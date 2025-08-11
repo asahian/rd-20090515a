@@ -4,6 +4,7 @@ import com.mojang.rubydung.ecs.World;
 import com.mojang.rubydung.ecs.component.MotionComponent;
 import com.mojang.rubydung.ecs.component.OnGroundComponent;
 import com.mojang.rubydung.ecs.component.PositionComponent;
+import com.mojang.rubydung.ecs.component.RotationComponent;
 import com.mojang.rubydung.level.Level;
 
 public class PhysicsSystem implements com.mojang.rubydung.ecs.System {
@@ -16,6 +17,15 @@ public class PhysicsSystem implements com.mojang.rubydung.ecs.System {
 
     @Override
     public void update(World world, float partialTicks) {
+        // Update previous rotation
+        world.getEntitiesWith(RotationComponent.class).forEach(entity -> {
+            RotationComponent rotation = world.getComponent(entity, RotationComponent.class);
+
+            // Store previous rotation
+            rotation.prevXRotation = rotation.xRotation;
+            rotation.prevYRotation = rotation.yRotation;
+        });
+
         world.getEntitiesWith(PositionComponent.class, MotionComponent.class, OnGroundComponent.class).forEach(entity -> {
             PositionComponent position = world.getComponent(entity, PositionComponent.class);
             MotionComponent motion = world.getComponent(entity, MotionComponent.class);

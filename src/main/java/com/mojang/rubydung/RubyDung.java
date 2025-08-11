@@ -120,9 +120,9 @@ public class RubyDung implements Runnable {
 
         // Create world and systems
         this.world = new World();
+        this.world.addSystem(new PhysicsSystem(this.level));
         this.world.addSystem(new PlayerInputSystem());
         this.world.addSystem(new MouseInputSystem());
-        this.world.addSystem(new PhysicsSystem(this.level));
         this.world.addSystem(new CollisionSystem(this.level));
         this.world.addSystem(new ZombieAISystem());
         RenderSystem renderSystem = new RenderSystem();
@@ -283,9 +283,13 @@ public class RubyDung implements Runnable {
         // Eye height
         glTranslatef(0.0f, 0.0f, -0.3f);
 
+        // Smooth rotation
+        float rX = (float) (rotation.prevXRotation + (rotation.xRotation - rotation.prevXRotation) * partialTicks);
+        float rY = (float) (rotation.prevYRotation + (rotation.yRotation - rotation.prevYRotation) * partialTicks);
+
         // Rotate camera
-        glRotatef(rotation.xRotation, 1.0f, 0.0f, 0.0f);
-        glRotatef(rotation.yRotation, 0.0f, 1.0f, 0.0f);
+        glRotatef(rX, 1.0f, 0.0f, 0.0f);
+        glRotatef(rY, 0.0f, 1.0f, 0.0f);
 
         // Smooth movement
         double x = position.prevX + (position.x - position.prevX) * partialTicks;
