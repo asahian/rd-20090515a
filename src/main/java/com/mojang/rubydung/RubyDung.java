@@ -7,6 +7,7 @@ import com.mojang.rubydung.ecs.system.*;
 import com.mojang.rubydung.level.*;
 import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
+import com.mojang.rubydung.render.Renderer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -33,6 +34,7 @@ public class RubyDung implements Runnable {
 
     volatile Level level;
     volatile LevelRenderer levelRenderer;
+    volatile Renderer renderer;
     volatile World world;
     volatile Entity player;
 
@@ -128,6 +130,7 @@ public class RubyDung implements Runnable {
         // Create level and player (Has to be in main thread)
         this.level = new Level(256, 256, 64);
         this.levelRenderer = new LevelRenderer(this.level);
+        this.renderer = new Renderer(this.level);
 
         // Create world and systems
         this.world = new World();
@@ -170,6 +173,7 @@ public class RubyDung implements Runnable {
         this.running = false;
         this.level.save();
 
+        this.renderer.destroy();
         Mouse.destroy();
         Keyboard.destroy();
         Display.destroy();
@@ -433,7 +437,7 @@ public class RubyDung implements Runnable {
         glEnable(GL_FOG);
 
         // Render bright tiles
-        this.levelRenderer.render(0);
+        this.renderer.render(0);
 
         // Render zombies in sunlight
         this.world.getSystem(RenderSystem.class).render(this.world, partialTicks, 0);
@@ -443,7 +447,7 @@ public class RubyDung implements Runnable {
         setupFog(1);
 
         // Render dark tiles in shadow
-        this.levelRenderer.render(1);
+        this.renderer.render(1);
 
         // Render zombies in shadow
         this.world.getSystem(RenderSystem.class).render(this.world, partialTicks, 1);

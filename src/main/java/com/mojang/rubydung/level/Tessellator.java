@@ -10,22 +10,23 @@ public class Tessellator {
 
     private static final int MAX_VERTICES = 100000;
 
-    private final FloatBuffer vertexBuffer = BufferUtils.createFloatBuffer(MAX_VERTICES * 3);
-    private final FloatBuffer textureCoordinateBuffer = BufferUtils.createFloatBuffer(MAX_VERTICES * 2);
-    private final FloatBuffer colorBuffer = BufferUtils.createFloatBuffer(MAX_VERTICES * 3);
+    private final FloatBuffer buffer = BufferUtils.createFloatBuffer(MAX_VERTICES * 9);
 
     private int vertices = 0;
 
     // Texture
-    private boolean hasTexture = false;
     private float textureU;
     private float textureV;
 
     // Color
-    private boolean hasColor;
     private float red;
     private float green;
     private float blue;
+    private float alpha = 1.0f;
+
+    // States
+    private boolean hasTexture = false;
+    private boolean hasColor = false;
 
     /**
      * Reset the buffer
@@ -42,30 +43,24 @@ public class Tessellator {
      * @param z Vertex point z
      */
     public void vertex(float x, float y, float z) {
-        // Vertex
-        this.vertexBuffer.put(this.vertices * 3, x);
-        this.vertexBuffer.put(this.vertices * 3 + 1, y);
-        this.vertexBuffer.put(this.vertices * 3 + 2, z);
+        // Add vertex data to buffer
+        this.buffer.put(x).put(y).put(z);
 
-        // Texture coordinate
+        // Add texture coordinates to buffer
         if (this.hasTexture) {
-            this.textureCoordinateBuffer.put(this.vertices * 2, this.textureU);
-            this.textureCoordinateBuffer.put(this.vertices * 2 + 1, this.textureV);
+            this.buffer.put(this.textureU).put(this.textureV);
+        } else {
+            this.buffer.put(0.0f).put(0.0f);
         }
 
-        // Color coordinate
+        // Add color to buffer
         if (this.hasColor) {
-            this.colorBuffer.put(this.vertices * 3, this.red);
-            this.colorBuffer.put(this.vertices * 3 + 1, this.green);
-            this.colorBuffer.put(this.vertices * 3 + 2, this.blue);
+            this.buffer.put(this.red).put(this.green).put(this.blue).put(this.alpha);
+        } else {
+            this.buffer.put(1.0f).put(1.0f).put(1.0f).put(1.0f);
         }
 
         this.vertices++;
-
-        // Flush if there are too many vertices in the buffer
-        if (this.vertices == MAX_VERTICES) {
-            flush();
-        }
     }
 
     /**
@@ -102,48 +97,55 @@ public class Tessellator {
      * @param blue  Blue (0.0 - 1.0)
      */
     public void color(float red, float green, float blue) {
+        this.color(red, green, blue, 1.0f);
+    }
+
+    /**
+     * Set the RGBA color
+     *
+     * @param red   Red (0.0 - 1.0)
+     * @param green Green (0.0 - 1.0)
+     * @param blue  Blue (0.0 - 1.0)
+     * @param alpha Alpha (0.0 - 1.0)
+     */
+    public void color(float red, float green, float blue, float alpha) {
         this.hasColor = true;
         this.red = red;
         this.green = green;
         this.blue = blue;
+        this.alpha = alpha;
     }
 
     /**
      * Render the buffer
      */
     public void flush() {
-        this.vertexBuffer.flip();
-        this.textureCoordinateBuffer.flip();
-
-        // Set points
-        glVertexPointer(3, GL_POINTS, this.vertexBuffer);
-        if (this.hasTexture) {
-            glTexCoordPointer(2, GL_POINTS, this.textureCoordinateBuffer);
-        }
-        if (this.hasColor) {
-            glColorPointer(3, GL_POINTS, this.colorBuffer);
-        }
+        this.buffer.flip();
 
         // Enable client states
         glEnableClientState(GL_VERTEX_ARRAY);
-        if (this.hasTexture) {
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        }
-        if (this.hasColor) {
-            glEnableClientState(GL_COLOR_ARRAY);
-        }
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glEnableClientState(GL_COLOR_ARRAY);
+
+        // Set pointers
+        int stride = 36;
+        this.buffer.position(0);
+        glVertexPointer(3, stride, this.buffer.asReadOnlyBuffer());
+
+        this.buffer.position(3);
+        glTexCoordPointer(2, stride, this.buffer.asReadOnlyBuffer());
+
+        this.buffer.position(5);
+        glColorPointer(4, stride, this.buffer.asReadOnlyBuffer());
 
         // Draw quads
-        glDrawArrays(GL_QUADS, GL_POINTS, this.vertices);
+        glDrawArrays(GL_QUADS, 0, this.vertices);
 
-        // Reset after rendering
+        // Disable client states
         glDisableClientState(GL_VERTEX_ARRAY);
-        if (this.hasTexture) {
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-        }
-        if (this.hasColor) {
-            glDisableClientState(GL_COLOR_ARRAY);
-        }
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisableClientState(GL_COLOR_ARRAY);
+
         clear();
     }
 
@@ -151,11 +153,18 @@ public class Tessellator {
      * Reset vertex buffer
      */
     private void clear() {
-        this.vertexBuffer.clear();
-        this.textureCoordinateBuffer.clear();
+        this.buffer.clear();
         this.vertices = 0;
-
         this.hasTexture = false;
         this.hasColor = false;
+    }
+
+    public FloatBuffer getBuffer() {
+        this.buffer.flip();
+        return this.buffer;
+    }
+
+    public int getVertexCount() {
+        return this.vertices;
     }
 }

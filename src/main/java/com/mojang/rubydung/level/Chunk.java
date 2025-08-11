@@ -1,11 +1,8 @@
 package com.mojang.rubydung.level;
 
-import com.mojang.rubydung.Textures;
 import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
-
-import static org.lwjgl.opengl.GL11.*;
-
+import com.mojang.rubydung.render.ChunkMesh;
 
 public class Chunk {
 
@@ -40,7 +37,7 @@ public class Chunk {
     /**
      * Rendering states
      */
-    private final int lists;
+    private final ChunkMesh[] chunkMeshes = new ChunkMesh[2];
     private boolean dirty = true;
 
     /**
@@ -69,8 +66,9 @@ public class Chunk {
         this.y = (minY + maxY) / 2.0f;
         this.z = (minZ + maxZ) / 2.0f;
 
-        // Generate lists id
-        this.lists = glGenLists(2);
+        // Create chunk meshes
+        this.chunkMeshes[0] = new ChunkMesh();
+        this.chunkMeshes[1] = new ChunkMesh();
 
         // Create bounding box object of chunk
         this.boundingBox = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
@@ -99,9 +97,6 @@ public class Chunk {
         long timeRebuildStart = System.nanoTime();
 
         // Setup tile rendering
-        glNewList(this.lists + layer, GL_COMPILE);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, Textures.loadTexture("/terrain.png", GL_NEAREST));
         TESSELLATOR.init();
 
         // For each tile in this chunk
@@ -123,9 +118,7 @@ public class Chunk {
         }
 
         // Finish tile rendering
-        TESSELLATOR.flush();
-        glDisable(GL_TEXTURE_2D);
-        glEndList();
+        this.chunkMeshes[layer].rebuild(TESSELLATOR);
 
         // Update chunk update counter
         if (tiles > 0) {
@@ -143,13 +136,13 @@ public class Chunk {
     }
 
     /**
-     * Render all tiles in this chunk
+     * Get chunk mesh by layer
      *
-     * @param layer The render layer (Shadow layer)
+     * @param layer The layer of the chunk mesh
+     * @return The chunk mesh
      */
-    public void render(int layer) {
-        // Call lists id to render the chunk
-        glCallList(this.lists + layer);
+    public ChunkMesh getChunkMesh(int layer) {
+        return this.chunkMeshes[layer];
     }
 
     /**
@@ -185,5 +178,13 @@ public class Chunk {
         double distanceY = y - this.y;
         double distanceZ = z - this.z;
         return distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ;
+    }
+
+    /**
+     * Destroy the chunk meshes
+     */
+    public void destroy() {
+        this.chunkMeshes[0].destroy();
+        this.chunkMeshes[1].destroy();
     }
 }
