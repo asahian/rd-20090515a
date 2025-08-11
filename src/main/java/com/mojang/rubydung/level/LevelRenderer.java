@@ -16,17 +16,19 @@ public class LevelRenderer implements LevelListener {
 
     private final Tessellator tessellator;
     private final Level level;
+    private final ChunkBuilder chunkBuilder;
 
     /**
      * Create renderer for level
      *
      * @param level The rendered level
      */
-    public LevelRenderer(Level level) {
+    public LevelRenderer(Level level, ChunkBuilder chunkBuilder) {
         level.addListener(this);
 
         this.tessellator = new Tessellator();
         this.level = level;
+        this.chunkBuilder = chunkBuilder;
     }
 
     /**
@@ -50,9 +52,6 @@ public class LevelRenderer implements LevelListener {
      * @param player The player for the sort priority. Chunks closer to the player will get a higher priority.
      */
     public void updateDirtyChunks(Entity player, World world) {
-        // Reset global chunk rebuild stats
-        Chunk.rebuiltThisFrame = 0;
-
         // Get all dirty chunks
         List<Chunk> dirty = getAllDirtyChunks();
         if (!dirty.isEmpty()) {
@@ -60,9 +59,9 @@ public class LevelRenderer implements LevelListener {
             // Sort the dirty chunk list
             dirty.sort(new DirtyChunkSorter(player, world, Frustum.getFrustum()));
 
-            // Rebuild max 8 chunks per frame
-            for (int i = 0; i < 8 && i < dirty.size(); i++) {
-                dirty.get(i).rebuild();
+            // Add all dirty chunks to the chunk builder
+            for (Chunk chunk : dirty) {
+                this.chunkBuilder.rebuild(chunk);
             }
         }
     }

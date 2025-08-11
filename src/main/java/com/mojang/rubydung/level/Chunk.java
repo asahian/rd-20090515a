@@ -4,22 +4,15 @@ import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
 import com.mojang.rubydung.render.ChunkMesh;
 
-public class Chunk {
+import java.nio.FloatBuffer;
 
-    private static final Tessellator TESSELLATOR = new Tessellator();
+public class Chunk {
 
     /**
      * Global rebuild statistic
      */
-    public static int rebuiltThisFrame;
     public static int updates;
     public long dirtiedTime;
-
-    /**
-     * Internal rebuild statistic
-     */
-    private static long totalTime;
-    private static int totalUpdates;
 
     /**
      * The game level
@@ -38,6 +31,9 @@ public class Chunk {
      * Rendering states
      */
     private final ChunkMesh[] chunkMeshes = new ChunkMesh[2];
+    private final FloatBuffer[] buffers = new FloatBuffer[2];
+    private final int[] vertexCounts = new int[2];
+    private boolean rebuilt = false;
     private boolean dirty = true;
 
     /**
@@ -75,29 +71,16 @@ public class Chunk {
     }
 
     /**
-     * Render all tiles in this chunk
+     * Tessellate all tiles in this chunk (Worker Thread)
      *
-     * @param layer The layer of the chunk (For shadows)
+     * @param layer       The layer of the chunk (For shadows)
+     * @param tessellator The tessellator to use
      */
-    public void rebuild(int layer) {
-        if (rebuiltThisFrame == 2) {
-            // Rebuild limit reached for this frame
-            return;
-        }
-
-        // Update global stats
+    public void rebuild(int layer, Tessellator tessellator) {
         updates++;
-        rebuiltThisFrame++;
-
-        // Mark chunk as no longer dirty
-        this.dirty = false;
-
-        // Tile render counter
-        int tiles = 0;
-        long timeRebuildStart = System.nanoTime();
 
         // Setup tile rendering
-        TESSELLATOR.init();
+        tessellator.init();
 
         // For each tile in this chunk
         for (int x = this.minX; x < this.maxX; ++x) {
@@ -108,31 +91,40 @@ public class Chunk {
                     // Is a tile at this location?
                     if (tileId > 0) {
                         // Render the tile
-                        Tile.tiles[tileId].render(TESSELLATOR, this.level, layer, x, y, z);
-
-                        // Increase tile render counter
-                        tiles++;
+                        Tile.tiles[tileId].render(tessellator, this.level, layer, x, y, z);
                     }
                 }
             }
         }
 
-        // Finish tile rendering
-        this.chunkMeshes[layer].rebuild(TESSELLATOR);
-
-        // Update chunk update counter
-        if (tiles > 0) {
-            totalTime += System.nanoTime() - timeRebuildStart;
-            totalUpdates++;
-        }
+        // Store result
+        this.buffers[layer] = tessellator.getBuffer();
+        this.vertexCounts[layer] = tessellator.getVertexCount();
     }
 
     /**
-     * Rebuild the chunk for all layers
+     * Upload the tessellated mesh to the GPU (Main Thread)
      */
     public void rebuild() {
-        rebuild(0);
-        rebuild(1);
+        // Not rebuilt yet
+        if (!this.rebuilt) {
+            return;
+        }
+
+        // Upload layers
+        this.chunkMeshes[0].rebuild(this.buffers[0], this.vertexCounts[0]);
+        this.chunkMeshes[1].rebuild(this.buffers[1], this.vertexCounts[1]);
+
+        // Mark as no longer rebuilt
+        this.rebuilt = false;
+    }
+
+    /**
+     * Mark this chunk as rebuilt (called by worker thread)
+     */
+    public void setRebuilt() {
+        this.rebuilt = true;
+        this.dirty = false;
     }
 
     /**
@@ -164,6 +156,16 @@ public class Chunk {
     public boolean isDirty() {
         return dirty;
     }
+
+    /**
+     * State of the chunk for upload
+     *
+     * @return Chunk is rebuilt
+     */
+    public boolean isRebuilt() {
+        return rebuilt;
+    }
+
 
     /**
      * Calculate squared distance to the player

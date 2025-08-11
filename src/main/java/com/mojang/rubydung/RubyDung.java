@@ -34,6 +34,7 @@ public class RubyDung implements Runnable {
 
     volatile Level level;
     volatile LevelRenderer levelRenderer;
+    volatile ChunkBuilder chunkBuilder;
     volatile Renderer renderer;
     volatile World world;
     volatile Entity player;
@@ -130,7 +131,8 @@ public class RubyDung implements Runnable {
 
         // Create level and player (Has to be in main thread)
         this.level = new Level(256, 256, 64);
-        this.levelRenderer = new LevelRenderer(this.level);
+        this.chunkBuilder = new ChunkBuilder();
+        this.levelRenderer = new LevelRenderer(this.level, this.chunkBuilder);
         this.renderer = new Renderer(this.level);
 
         // Create world and systems
@@ -172,6 +174,7 @@ public class RubyDung implements Runnable {
      */
     public void destroy() {
         this.running = false;
+        this.chunkBuilder.stop();
         this.level.save();
 
         this.renderer.destroy();
@@ -201,6 +204,7 @@ public class RubyDung implements Runnable {
 
         this.running = true;
         new Thread(new GameUpdater(this)).start();
+        new Thread(this.chunkBuilder).start();
 
         try {
             // Start the game loop
@@ -412,6 +416,18 @@ public class RubyDung implements Runnable {
 
 
     /**
+     * Upload all chunks which are marked as rebuilt
+     */
+    private void uploadBuiltChunks() {
+        for (Chunk chunk : this.level.getChunks()) {
+            if (chunk.isRebuilt()) {
+                chunk.rebuild();
+            }
+        }
+    }
+
+
+    /**
      * Rendering the game
      *
      * @param partialTicks Overflow ticks to interpolate
@@ -428,7 +444,10 @@ public class RubyDung implements Runnable {
         glEnable(GL_CULL_FACE);
 
         // Get current frustum
-        var frustum = Frustum.getFrustum();
+        Frustum.getFrustum();
+
+        // Upload all built chunks
+        uploadBuiltChunks();
 
         // Update dirty chunks
         this.levelRenderer.updateDirtyChunks(this.player, this.world);

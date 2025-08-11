@@ -3,6 +3,8 @@ package com.mojang.rubydung.render;
 import com.mojang.rubydung.level.Tessellator;
 import org.lwjgl.opengl.GL15;
 
+import java.nio.FloatBuffer;
+
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 
@@ -11,7 +13,7 @@ public class ChunkMesh {
     private int vboId = -1;
     private int vertexCount = 0;
 
-    public void rebuild(Tessellator tessellator) {
+    public void rebuild(FloatBuffer buffer, int vertexCount) {
         // Clear old vbo
         if (this.vboId != -1) {
             destroy();
@@ -19,11 +21,11 @@ public class ChunkMesh {
 
         // Create vbo
         this.vboId = glGenBuffers();
-        this.vertexCount = tessellator.getVertexCount();
+        this.vertexCount = vertexCount;
 
         // Upload vbo
         glBindBuffer(GL_ARRAY_BUFFER, this.vboId);
-        glBufferData(GL_ARRAY_BUFFER, tessellator.getBuffer(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, buffer, GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
