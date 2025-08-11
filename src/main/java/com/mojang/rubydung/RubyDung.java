@@ -26,12 +26,15 @@ import static org.lwjgl.util.glu.GLU.gluPickMatrix;
 public class RubyDung implements Runnable {
 
     private static final boolean FULLSCREEN_MODE = true;
-    private final Timer timer = new Timer(20);
 
-    private Level level;
-    private LevelRenderer levelRenderer;
-    private World world;
-    private Entity player;
+    public volatile boolean running;
+
+    private float partialTicks;
+
+    Level level;
+    LevelRenderer levelRenderer;
+    World world;
+    Entity player;
 
     /**
      * Fog
@@ -61,7 +64,15 @@ public class RubyDung implements Runnable {
     /**
      * Selected tile in hand
      */
-    private int selectedTileId = 1;
+    int selectedTileId = 1;
+
+    public float getPartialTicks() {
+        return partialTicks;
+    }
+
+    public void setPartialTicks(float partialTicks) {
+        this.partialTicks = partialTicks;
+    }
 
     /**
      * Initialize the game.
@@ -156,6 +167,7 @@ public class RubyDung implements Runnable {
      * Destroy mouse, keyboard and display
      */
     public void destroy() {
+        this.running = false;
         this.level.save();
 
         Mouse.destroy();
@@ -184,17 +196,14 @@ public class RubyDung implements Runnable {
 
         try {
             // Start the game loop
-            while (!Keyboard.isKeyDown(1) && !Display.isCloseRequested()) {
-                // Update the timer
-                this.timer.advanceTime();
-
-                // Call the tick to reach updates 20 per seconds
-                for (var i = 0; i < this.timer.ticks; ++i) {
-                    tick();
+            this.running = true;
+            while (this.running) {
+                if (Display.isCloseRequested()) {
+                    this.running = false;
                 }
 
                 // Render the game
-                render(this.timer.partialTicks);
+                render(getPartialTicks());
 
                 // Increase rendered frame
                 frames++;
@@ -220,7 +229,7 @@ public class RubyDung implements Runnable {
         }
     }
 
-    private void createZombie() {
+    void createZombie() {
         Entity zombie = this.world.createEntity();
         float x = (float) Math.random() * this.level.width;
         float y = (float) (this.level.depth + 3);
@@ -233,42 +242,6 @@ public class RubyDung implements Runnable {
         this.world.addComponent(zombie, new ZombieComponent());
         this.world.addComponent(zombie, new ZombieAIComponent());
         this.world.addComponent(zombie, new ZombieModelComponent());
-    }
-
-    /**
-     * Game tick, called exactly 20 times per second
-     */
-    private void tick() {
-        // Listen for keyboard inputs
-        while (Keyboard.next()) {
-            if (Keyboard.getEventKeyState()) {
-
-                // Save the level
-                if (Keyboard.getEventKey() == 28) { // Enter
-                    this.level.save();
-                }
-
-                // Tile selection
-                this.selectedTileId = switch (Keyboard.getEventKey()) {
-                    case 2 -> Tile.rock.id; // 1
-                    case 3 -> Tile.dirt.id; // 2
-                    case 4 -> Tile.stoneBrick.id; // 3
-                    case 5 -> Tile.wood.id; // 4
-                    default -> this.selectedTileId;
-                };
-
-                // Spawn zombie
-                if (Keyboard.getEventKey() == 34) { // G
-                    createZombie();
-                }
-            }
-        }
-
-        // Tick random tile in level
-        this.level.onTick();
-
-        // Update world
-        this.world.update(0);
     }
 
     /**
@@ -631,6 +604,8 @@ public class RubyDung implements Runnable {
      * @param args Program arguments (unused)
      */
     public static void main(String[] args) {
-        new RubyDung().run();
+        RubyDung rubyDung = new RubyDung();
+        new Thread(new GameUpdater(rubyDung)).start();
+        rubyDung.run();
     }
 }
