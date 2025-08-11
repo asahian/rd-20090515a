@@ -180,9 +180,13 @@ public class Chunk {
      * @return The squared distance from the center of the chunk to the player
      */
     public double distanceToSqr(Player player) {
-        double distanceX = player.x - this.x;
-        double distanceY = player.y - this.y;
-        double distanceZ = player.z - this.z;
+        return distanceToSqr(player.x, player.y, player.z);
+    }
+
+    public double distanceToSqr(double x, double y, double z) {
+        double distanceX = x - this.x;
+        double distanceY = y - this.y;
+        double distanceZ = z - this.z;
         return distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ;
     }
 }

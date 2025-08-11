@@ -1,8 +1,12 @@
 package com.mojang.rubydung;
 
-import com.mojang.rubydung.character.Zombie;
+import com.mojang.rubydung.ecs.Entity;
+import com.mojang.rubydung.ecs.World;
+import com.mojang.rubydung.ecs.component.*;
+import com.mojang.rubydung.ecs.system.*;
 import com.mojang.rubydung.level.*;
 import com.mojang.rubydung.level.tile.Tile;
+import com.mojang.rubydung.phys.AABB;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -14,9 +18,6 @@ import org.lwjgl.opengl.GL11;
 import javax.swing.*;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.util.glu.GLU.gluPerspective;
@@ -29,9 +30,8 @@ public class RubyDung implements Runnable {
 
     private Level level;
     private LevelRenderer levelRenderer;
-    private Player player;
-
-    private final List<Zombie> zombies = new ArrayList<>();
+    private World world;
+    private Entity player;
 
     /**
      * Fog
@@ -117,16 +117,38 @@ public class RubyDung implements Runnable {
         // Create level and player (Has to be in main thread)
         this.level = new Level(256, 256, 64);
         this.levelRenderer = new LevelRenderer(this.level);
-        this.player = new Player(this.level);
+
+        // Create world and systems
+        this.world = new World();
+        this.world.addSystem(new PlayerInputSystem());
+        this.world.addSystem(new MouseInputSystem());
+        this.world.addSystem(new PhysicsSystem(this.level));
+        this.world.addSystem(new CollisionSystem(this.level));
+        this.world.addSystem(new ZombieAISystem());
+        RenderSystem renderSystem = new RenderSystem();
+        renderSystem.setLevel(this.level);
+        this.world.addSystem(renderSystem);
+
+        // Create player entity
+        this.player = this.world.createEntity();
+        float x = (float) Math.random() * this.level.width;
+        float y = (float) (this.level.depth + 3);
+        float z = (float) Math.random() * this.level.height;
+        this.world.addComponent(this.player, new PositionComponent(x, y, z));
+        this.world.addComponent(this.player, new MotionComponent(0, 0, 0));
+        this.world.addComponent(this.player, new RotationComponent(0, 0));
+        this.world.addComponent(this.player, new BoundingBoxComponent(new AABB(x - 0.3f, y - 0.9f, z - 0.3f, x + 0.3f, y + 0.9f, z + 0.3f)));
+        this.world.addComponent(this.player, new OnGroundComponent(false));
+        this.world.addComponent(this.player, new HeightOffsetComponent(1.62f));
+        this.world.addComponent(this.player, new PlayerInputComponent());
+
 
         // Grab mouse cursor
         Mouse.setGrabbed(true);
 
         // Spawn some zombies
         for (int i = 0; i < 10; ++i) {
-            Zombie zombie = new Zombie(this.level, 128.0F, 0.0F, 129.0F);
-            zombie.resetPosition();
-            this.zombies.add(zombie);
+            createZombie();
         }
     }
 
@@ -198,6 +220,21 @@ public class RubyDung implements Runnable {
         }
     }
 
+    private void createZombie() {
+        Entity zombie = this.world.createEntity();
+        float x = (float) Math.random() * this.level.width;
+        float y = (float) (this.level.depth + 3);
+        float z = (float) Math.random() * this.level.height;
+        this.world.addComponent(zombie, new PositionComponent(x, y, z));
+        this.world.addComponent(zombie, new MotionComponent(0, 0, 0));
+        this.world.addComponent(zombie, new BoundingBoxComponent(new AABB(x - 0.3f, y - 0.9f, z - 0.3f, x + 0.3f, y + 0.9f, z + 0.3f)));
+        this.world.addComponent(zombie, new OnGroundComponent(false));
+        this.world.addComponent(zombie, new HeightOffsetComponent(0f));
+        this.world.addComponent(zombie, new ZombieComponent());
+        this.world.addComponent(zombie, new ZombieAIComponent());
+        this.world.addComponent(zombie, new ZombieModelComponent());
+    }
+
     /**
      * Game tick, called exactly 20 times per second
      */
@@ -222,7 +259,7 @@ public class RubyDung implements Runnable {
 
                 // Spawn zombie
                 if (Keyboard.getEventKey() == 34) { // G
-                    this.zombies.add(new Zombie(this.level, this.player.x, this.player.y, this.player.z));
+                    createZombie();
                 }
             }
         }
@@ -230,21 +267,8 @@ public class RubyDung implements Runnable {
         // Tick random tile in level
         this.level.onTick();
 
-        // Tick zombies
-        for (Iterator<Zombie> iterator = this.zombies.iterator(); iterator.hasNext(); ) {
-            var zombie = iterator.next();
-
-            // Tick zombie
-            zombie.onTick();
-
-            // Remove zombie
-            if (zombie.removed) {
-                iterator.remove();
-            }
-        }
-
-        // Tick player
-        this.player.onTick();
+        // Update world
+        this.world.update(0);
     }
 
     /**
@@ -253,19 +277,20 @@ public class RubyDung implements Runnable {
      * @param partialTicks Overflow ticks to interpolate
      */
     private void moveCameraToPlayer(float partialTicks) {
-        var player = this.player;
+        PositionComponent position = this.world.getComponent(this.player, PositionComponent.class);
+        RotationComponent rotation = this.world.getComponent(this.player, RotationComponent.class);
 
         // Eye height
         glTranslatef(0.0f, 0.0f, -0.3f);
 
         // Rotate camera
-        glRotatef(player.xRotation, 1.0f, 0.0f, 0.0f);
-        glRotatef(player.yRotation, 0.0f, 1.0f, 0.0f);
+        glRotatef(rotation.xRotation, 1.0f, 0.0f, 0.0f);
+        glRotatef(rotation.yRotation, 0.0f, 1.0f, 0.0f);
 
         // Smooth movement
-        double x = this.player.prevX + (this.player.x - this.player.prevX) * partialTicks;
-        double y = this.player.prevY + (this.player.y - this.player.prevY) * partialTicks;
-        double z = this.player.prevZ + (this.player.z - this.player.prevZ) * partialTicks;
+        double x = position.prevX + (position.x - position.prevX) * partialTicks;
+        double y = position.prevY + (position.y - position.prevY) * partialTicks;
+        double z = position.prevZ + (position.z - position.prevZ) * partialTicks;
 
         // Move camera to players location
         glTranslated(-x, -y, -z);
@@ -354,7 +379,7 @@ public class RubyDung implements Runnable {
         this.setupPickCamera(partialTicks, this.width / 2, this.height / 2);
 
         // Render all possible pick selection faces to the target
-        this.levelRenderer.pick(this.player);
+        this.levelRenderer.pick(this.player, this.world);
 
         // Flip buffer
         this.selectBuffer.flip();
@@ -405,13 +430,6 @@ public class RubyDung implements Runnable {
      * @param partialTicks Overflow ticks to interpolate
      */
     private void render(float partialTicks) {
-        // Get mouse motion
-        var motionX = Mouse.getDX();
-        var motionY = Mouse.getDY();
-
-        // Rotate the camera using the mouse motion input
-        this.player.turn(motionX, motionY);
-
         // Pick tile
         pick(partialTicks);
 
@@ -456,7 +474,7 @@ public class RubyDung implements Runnable {
         var frustum = Frustum.getFrustum();
 
         // Update dirty chunks
-        this.levelRenderer.updateDirtyChunks(this.player);
+        this.levelRenderer.updateDirtyChunks(this.player, this.world);
 
         // Setup daylight fog
         setupFog(0);
@@ -466,11 +484,8 @@ public class RubyDung implements Runnable {
         this.levelRenderer.render(0);
 
         // Render zombies in sunlight
-        for (var zombie : this.zombies) {
-            if (zombie.isLit() && frustum.isVisible(zombie.boundingBox)) {
-                zombie.render(partialTicks);
-            }
-        }
+        this.world.getSystem(RenderSystem.class).render(this.world, partialTicks, 0);
+
 
         // Setup shadow fog
         setupFog(1);
@@ -479,11 +494,8 @@ public class RubyDung implements Runnable {
         this.levelRenderer.render(1);
 
         // Render zombies in shadow
-        for (var zombie : this.zombies) {
-            if (!zombie.isLit() && frustum.isVisible(zombie.boundingBox)) {
-                zombie.render(partialTicks);
-            }
-        }
+        this.world.getSystem(RenderSystem.class).render(this.world, partialTicks, 1);
+
 
         // Finish rendering
         glDisable(GL_LIGHTING);

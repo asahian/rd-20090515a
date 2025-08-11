@@ -1,8 +1,9 @@
 package com.mojang.rubydung.level;
 
-import com.mojang.rubydung.Entity;
 import com.mojang.rubydung.HitResult;
-import com.mojang.rubydung.Player;
+import com.mojang.rubydung.ecs.Entity;
+import com.mojang.rubydung.ecs.World;
+import com.mojang.rubydung.ecs.component.BoundingBoxComponent;
 import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
 
@@ -113,13 +114,13 @@ public class LevelRenderer implements LevelListener {
      *
      * @param player The player for the sort priority. Chunks closer to the player will get a higher priority.
      */
-    public void updateDirtyChunks(Player player) {
+    public void updateDirtyChunks(Entity player, World world) {
         // Get all dirty chunks
         List<Chunk> dirty = getAllDirtyChunks();
         if (!dirty.isEmpty()) {
 
             // Sort the dirty chunk list
-            dirty.sort(new DirtyChunkSorter(player, Frustum.getFrustum()));
+            dirty.sort(new DirtyChunkSorter(player, world, Frustum.getFrustum()));
 
             // Rebuild max 8 chunks per frame
             for (int i = 0; i < 8 && i < dirty.size(); i++) {
@@ -176,9 +177,10 @@ public class LevelRenderer implements LevelListener {
      *
      * @param player The player
      */
-    public void pick(Entity player) {
+    public void pick(Entity player, World world) {
         var radius = 3.0F;
-        var boundingBox = player.boundingBox.grow(radius, radius, radius);
+        BoundingBoxComponent boundingBoxComponent = world.getComponent(player, BoundingBoxComponent.class);
+        var boundingBox = boundingBoxComponent.boundingBox.grow(radius, radius, radius);
 
         var minX = (int) boundingBox.minX();
         var maxX = (int) (boundingBox.maxX() + 1.0f);

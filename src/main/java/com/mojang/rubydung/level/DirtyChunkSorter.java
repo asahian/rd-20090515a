@@ -1,6 +1,8 @@
 package com.mojang.rubydung.level;
 
-import com.mojang.rubydung.Player;
+import com.mojang.rubydung.ecs.Entity;
+import com.mojang.rubydung.ecs.World;
+import com.mojang.rubydung.ecs.component.PositionComponent;
 
 import java.util.Comparator;
 
@@ -8,7 +10,8 @@ public class DirtyChunkSorter implements Comparator<Chunk> {
 
     private final long now = System.currentTimeMillis();
 
-    private final Player player;
+    private final Entity player;
+    private final World world;
     private final Frustum frustum;
 
     /**
@@ -20,8 +23,9 @@ public class DirtyChunkSorter implements Comparator<Chunk> {
      * @param player The player for the distance priority.
      * @param frustum Frustum for the visible-in-camera priority
      */
-    public DirtyChunkSorter(Player player, Frustum frustum) {
+    public DirtyChunkSorter(Entity player, World world, Frustum frustum) {
         this.player = player;
+        this.world = world;
         this.frustum = frustum;
     }
 
@@ -55,6 +59,7 @@ public class DirtyChunkSorter implements Comparator<Chunk> {
         }
 
         // Decide priority using the distance to the player
-        return (chunk1.distanceToSqr(this.player) < chunk2.distanceToSqr(this.player)) ? -1 : 1;
+        PositionComponent playerPosition = this.world.getComponent(this.player, PositionComponent.class);
+        return (chunk1.distanceToSqr(playerPosition.x, playerPosition.y, playerPosition.z) < chunk2.distanceToSqr(playerPosition.x, playerPosition.y, playerPosition.z)) ? -1 : 1;
     }
 }
