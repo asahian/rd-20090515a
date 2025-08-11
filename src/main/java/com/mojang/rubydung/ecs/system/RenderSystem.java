@@ -1,9 +1,7 @@
 package com.mojang.rubydung.ecs.system;
 
-import com.mojang.rubydung.Textures;
 import com.mojang.rubydung.ecs.World;
 import com.mojang.rubydung.Textures;
-import com.mojang.rubydung.ecs.World;
 import com.mojang.rubydung.ecs.component.*;
 import com.mojang.rubydung.level.Frustum;
 import com.mojang.rubydung.level.Level;
