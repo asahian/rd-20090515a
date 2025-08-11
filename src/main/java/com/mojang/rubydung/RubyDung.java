@@ -202,6 +202,9 @@ public class RubyDung implements Runnable {
                     this.running = false;
                 }
 
+                // Handle user input
+                handleInput();
+
                 // Render the game
                 render(getPartialTicks());
 
@@ -410,36 +413,6 @@ public class RubyDung implements Runnable {
         // Pick tile
         pick(partialTicks);
 
-        // Listen for mouse inputs
-        while (Mouse.next()) {
-            // Right click
-            if (Mouse.getEventButton() == 1 && Mouse.getEventButtonState() && this.hitResult != null) {
-                // Destroy the tile
-                this.level.setTile(this.hitResult.x(), this.hitResult.y(), this.hitResult.z(), 0);
-            }
-
-            // Left click
-            if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState() && this.hitResult != null) {
-                // Get target tile position
-                var x = this.hitResult.x();
-                var y = this.hitResult.y();
-                var z = this.hitResult.z();
-
-                // Get position of the tile using face direction
-                switch (this.hitResult.face()) {
-                    case 0 -> y--;
-                    case 1 -> y++;
-                    case 2 -> z--;
-                    case 3 -> z++;
-                    case 4 -> x--;
-                    case 5 -> x++;
-                }
-
-                // Set the tile
-                this.level.setTile(x, y, z, this.selectedTileId);
-            }
-        }
-
         // Clear color and depth buffer and reset the camera
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -596,6 +569,70 @@ public class RubyDung implements Runnable {
         this.colorBuffer.put(red).put(green).put(blue).put(alpha);
         this.colorBuffer.flip();
         return this.colorBuffer;
+    }
+
+    /**
+     * Handle input
+     */
+    private void handleInput() {
+        // Listen for keyboard inputs
+        while (Keyboard.next()) {
+            if (Keyboard.getEventKeyState()) {
+
+                if (Keyboard.getEventKey() == 1) { // Escape
+                    this.running = false;
+                }
+
+                // Save the level
+                if (Keyboard.getEventKey() == 28) { // Enter
+                    this.level.save();
+                }
+
+                // Tile selection
+                this.selectedTileId = switch (Keyboard.getEventKey()) {
+                    case 2 -> Tile.rock.id; // 1
+                    case 3 -> Tile.dirt.id; // 2
+                    case 4 -> Tile.stoneBrick.id; // 3
+                    case 5 -> Tile.wood.id; // 4
+                    default -> this.selectedTileId;
+                };
+
+                // Spawn zombie
+                if (Keyboard.getEventKey() == 34) { // G
+                    createZombie();
+                }
+            }
+        }
+
+        // Listen for mouse inputs
+        while (Mouse.next()) {
+            // Right click
+            if (Mouse.getEventButton() == 1 && Mouse.getEventButtonState() && this.hitResult != null) {
+                // Destroy the tile
+                this.level.setTile(this.hitResult.x(), this.hitResult.y(), this.hitResult.z(), 0);
+            }
+
+            // Left click
+            if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState() && this.hitResult != null) {
+                // Get target tile position
+                var x = this.hitResult.x();
+                var y = this.hitResult.y();
+                var z = this.hitResult.z();
+
+                // Get position of the tile using face direction
+                switch (this.hitResult.face()) {
+                    case 0 -> y--;
+                    case 1 -> y++;
+                    case 2 -> z--;
+                    case 3 -> z++;
+                    case 4 -> x--;
+                    case 5 -> x++;
+                }
+
+                // Set the tile
+                this.level.setTile(x, y, z, this.selectedTileId);
+            }
+        }
     }
 
     /**

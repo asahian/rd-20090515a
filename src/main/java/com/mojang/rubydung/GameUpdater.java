@@ -35,35 +35,6 @@ public class GameUpdater implements Runnable {
      * Game tick, called exactly 20 times per second
      */
     public void tick() {
-        // Listen for keyboard inputs
-        while (Keyboard.next()) {
-            if (Keyboard.getEventKeyState()) {
-
-                if (Keyboard.getEventKey() == 1) { // Escape
-                    this.rubyDung.running = false;
-                }
-
-                // Save the level
-                if (Keyboard.getEventKey() == 28) { // Enter
-                    this.rubyDung.level.save();
-                }
-
-                // Tile selection
-                this.rubyDung.selectedTileId = switch (Keyboard.getEventKey()) {
-                    case 2 -> Tile.rock.id; // 1
-                    case 3 -> Tile.dirt.id; // 2
-                    case 4 -> Tile.stoneBrick.id; // 3
-                    case 5 -> Tile.wood.id; // 4
-                    default -> this.rubyDung.selectedTileId;
-                };
-
-                // Spawn zombie
-                if (Keyboard.getEventKey() == 34) { // G
-                    this.rubyDung.createZombie();
-                }
-            }
-        }
-
         // Tick random tile in level
         this.rubyDung.level.onTick();
 
