@@ -3,6 +3,7 @@ package com.mojang.rubydung.level;
 import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
 import com.mojang.rubydung.render.ChunkMesh;
+import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 
@@ -33,7 +34,7 @@ public class Chunk {
     private final ChunkMesh[] chunkMeshes = new ChunkMesh[2];
     private final FloatBuffer[] buffers = new FloatBuffer[2];
     private final int[] vertexCounts = new int[2];
-    private boolean rebuilt = false;
+    private volatile boolean rebuilt = false;
     private boolean dirty = true;
 
     /**
@@ -98,7 +99,12 @@ public class Chunk {
         }
 
         // Store result
-        this.buffers[layer] = tessellator.getBuffer();
+        FloatBuffer tessellatorBuffer = tessellator.getBuffer();
+        FloatBuffer chunkOwnBuffer = BufferUtils.createFloatBuffer(tessellatorBuffer.remaining());
+        chunkOwnBuffer.put(tessellatorBuffer);
+        chunkOwnBuffer.flip();
+
+        this.buffers[layer] = chunkOwnBuffer;
         this.vertexCounts[layer] = tessellator.getVertexCount();
     }
 
