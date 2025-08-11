@@ -29,12 +29,18 @@ dependencies {
 }
 
 
-tasks.register<JavaExec>("run") {
-    jvmArgs = listOf("-Dorg.lwjgl.librarypath=${project.projectDir.toPath()}/run/natives")
-    mainClass.set("com.mojang.rubydung.RubyDung")
-    classpath = sourceSets.getByName("main").runtimeClasspath
+tasks.register<Exec>("run") {
     workingDir = project.projectDir.resolve("run")
-    dependsOn(tasks.named("extractNatives"))
+    dependsOn(tasks.named("extractNatives"), tasks.named("classes"))
+    commandLine = listOf(
+        "xvfb-run",
+        "-a",
+        "${System.getProperty("java.home")}/bin/java",
+        "-Dorg.lwjgl.librarypath=${project.projectDir.toPath()}/run/natives",
+        "-cp",
+        sourceSets.getByName("main").runtimeClasspath.asPath,
+        "com.mojang.rubydung.RubyDung"
+    )
 }
 
 tasks.register<Copy>("extractNatives") {
