@@ -109,6 +109,7 @@ public class RubyDung implements Runnable {
 
         // Setup I/O
         Display.create();
+        Display.setVSyncEnabled(true);
         Keyboard.create();
         Mouse.create();
 
