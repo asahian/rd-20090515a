@@ -194,6 +194,9 @@ public class RubyDung implements Runnable {
         var frames = 0;
         var lastTime = System.currentTimeMillis();
 
+        this.running = true;
+        new Thread(new GameUpdater(this)).start();
+
         try {
             // Start the game loop
             while (this.running) {
@@ -640,9 +643,6 @@ public class RubyDung implements Runnable {
      * @param args Program arguments (unused)
      */
     public static void main(String[] args) {
-        RubyDung rubyDung = new RubyDung();
-        rubyDung.running = true;
-        new Thread(new GameUpdater(rubyDung)).start();
-        rubyDung.run();
+        new RubyDung().run();
     }
 }
