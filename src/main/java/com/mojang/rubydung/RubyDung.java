@@ -571,7 +571,7 @@ public class RubyDung implements Runnable {
         // Daylight fog
         if (fogType == 0) {
             // Fog distance
-            glFogi(GL_FOG_MODE, GL_VIEWPORT_BIT);
+            glFogi(GL_FOG_MODE, GL_EXP);
             glFogf(GL_FOG_DENSITY, 0.001F);
 
             // Set fog color
@@ -583,7 +583,7 @@ public class RubyDung implements Runnable {
         // Shadow fog
         if (fogType == 1) {
             // Fog distance
-            glFogi(GL_FOG_MODE, GL_VIEWPORT_BIT);
+            glFogi(GL_FOG_MODE, GL_EXP);
             glFogf(GL_FOG_DENSITY, 0.06F);
 
             // Set fog color
