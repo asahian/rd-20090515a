@@ -31,10 +31,10 @@ public class RubyDung implements Runnable {
 
     private float partialTicks;
 
-    Level level;
-    LevelRenderer levelRenderer;
-    World world;
-    Entity player;
+    volatile Level level;
+    volatile LevelRenderer levelRenderer;
+    volatile World world;
+    volatile Entity player;
 
     /**
      * Fog
