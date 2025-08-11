@@ -1,6 +1,5 @@
 package com.mojang.rubydung.level;
 
-import com.mojang.rubydung.Player;
 import com.mojang.rubydung.Textures;
 import com.mojang.rubydung.level.tile.Tile;
 import com.mojang.rubydung.phys.AABB;
@@ -176,13 +175,11 @@ public class Chunk {
     /**
      * Calculate squared distance to the player
      *
-     * @param player The player for the location
+     * @param x The player x for the location
+     * @param y The player y for the location
+     * @param z The player z for the location
      * @return The squared distance from the center of the chunk to the player
      */
-    public double distanceToSqr(Player player) {
-        return distanceToSqr(player.x, player.y, player.z);
-    }
-
     public double distanceToSqr(double x, double y, double z) {
         double distanceX = x - this.x;
         double distanceY = y - this.y;
