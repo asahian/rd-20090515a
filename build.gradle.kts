@@ -7,6 +7,12 @@ plugins {
 group = "net.minecraft"
 version = "rd-20090515"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
 repositories {
     mavenCentral()
 }

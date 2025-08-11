@@ -281,7 +281,7 @@ public class Frustum {
     }
 
     public boolean isVisible(AABB aabb) {
-        return cubeInFrustum((float) aabb.minX, (float) aabb.minY, (float) aabb.minZ,
-                (float) aabb.maxX, (float) aabb.maxY, (float) aabb.maxZ);
+        return cubeInFrustum((float) aabb.minX(), (float) aabb.minY(), (float) aabb.minZ(),
+                (float) aabb.maxX(), (float) aabb.maxY(), (float) aabb.maxZ());
     }
 }

@@ -1,11 +1,6 @@
 package com.mojang.rubydung.character;
 
-public class Vertex {
-
-    public Vec3 position;
-
-    public float u;
-    public float v;
+public record Vertex(Vec3 position, float u, float v) {
 
     /**
      * A vertex contains a 3 float vector position and UV coordinates
@@ -24,26 +19,11 @@ public class Vertex {
      * A vertex contains a 3 float vector position and UV coordinates
      *
      * @param vertex Vertex for the position
-     * @param u U mapping
-     * @param v V mapping
+     * @param u      U mapping
+     * @param v      V mapping
      */
     public Vertex(Vertex vertex, float u, float v) {
-        this.position = vertex.position;
-        this.u = u;
-        this.v = v;
-    }
-
-    /**
-     * A vertex contains a 3 float vector position and UV coordinates
-     *
-     * @param position Vector position
-     * @param u U mapping
-     * @param v V mapping
-     */
-    public Vertex(Vec3 position, float u, float v) {
-        this.position = position;
-        this.u = u;
-        this.v = v;
+        this(vertex.position(), u, v);
     }
 
     /**

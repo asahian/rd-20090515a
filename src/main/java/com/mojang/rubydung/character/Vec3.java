@@ -1,23 +1,13 @@
 package com.mojang.rubydung.character;
 
-public class Vec3 {
-
-    public float x;
-    public float y;
-    public float z;
-
-    /**
-     * Vector object containing three float values
-     *
-     * @param x X value
-     * @param y Y value
-     * @param z Z value
-     */
-    public Vec3(float x, float y, float z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+/**
+ * Vector object containing three float values
+ *
+ * @param x X value
+ * @param y Y value
+ * @param z Z value
+ */
+public record Vec3(float x, float y, float z) {
 
     /**
      * Create an interpolated vector from the current vector position to the given one
@@ -32,18 +22,5 @@ public class Vec3 {
         float interpolatedZ = this.z + (vector.z - this.z) * partialTicks;
 
         return new Vec3(interpolatedX, interpolatedY, interpolatedZ);
-    }
-
-    /**
-     * Set x, y and z of the vector
-     *
-     * @param x X value
-     * @param y Y value
-     * @param z Z value
-     */
-    public void set(float x, float y, float z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
     }
 }

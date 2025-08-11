@@ -262,14 +262,14 @@ public class Level {
      * @return List of bounding boxes representing the tiles around the given bounding box
      */
     public ArrayList<AABB> getCubes(AABB boundingBox) {
-        ArrayList<AABB> boundingBoxList = new ArrayList<>();
+        var boundingBoxList = new ArrayList<AABB>();
 
-        int minX = (int) (Math.floor(boundingBox.minX) - 1);
-        int maxX = (int) (Math.ceil(boundingBox.maxX) + 1);
-        int minY = (int) (Math.floor(boundingBox.minY) - 1);
-        int maxY = (int) (Math.ceil(boundingBox.maxY) + 1);
-        int minZ = (int) (Math.floor(boundingBox.minZ) - 1);
-        int maxZ = (int) (Math.ceil(boundingBox.maxZ) + 1);
+        var minX = (int) (Math.floor(boundingBox.minX()) - 1);
+        var maxX = (int) (Math.ceil(boundingBox.maxX()) + 1);
+        var minY = (int) (Math.floor(boundingBox.minY()) - 1);
+        var maxY = (int) (Math.ceil(boundingBox.maxY()) + 1);
+        var minZ = (int) (Math.floor(boundingBox.minZ()) - 1);
+        var maxZ = (int) (Math.ceil(boundingBox.maxZ()) + 1);
 
         // Minimum level position
         minX = Math.max(0, minX);

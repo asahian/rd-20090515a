@@ -114,22 +114,22 @@ public abstract class Entity {
         List<AABB> aABBs = this.level.getCubes(this.boundingBox.expand(x, y, z));
 
         // Check for Y collision
-        for (AABB abb : aABBs) {
+        for (var abb : aABBs) {
             y = abb.clipYCollide(this.boundingBox, y);
         }
-        this.boundingBox.move(0.0F, y, 0.0F);
+        this.boundingBox = this.boundingBox.offset(0.0F, y, 0.0F);
 
         // Check for X collision
-        for (AABB aABB : aABBs) {
+        for (var aABB : aABBs) {
             x = aABB.clipXCollide(this.boundingBox, x);
         }
-        this.boundingBox.move(x, 0.0F, 0.0F);
+        this.boundingBox = this.boundingBox.offset(x, 0.0F, 0.0F);
 
         // Check for Z collision
-        for (AABB aABB : aABBs) {
+        for (var aABB : aABBs) {
             z = aABB.clipZCollide(this.boundingBox, z);
         }
-        this.boundingBox.move(0.0F, 0.0F, z);
+        this.boundingBox = this.boundingBox.offset(0.0F, 0.0F, z);
 
         // Update on ground state
         this.onGround = prevY != y && prevY < 0.0F;
@@ -140,9 +140,9 @@ public abstract class Entity {
         if (prevZ != z) this.motionZ = 0.0D;
 
         // Move the actual entity position
-        this.x = (this.boundingBox.minX + this.boundingBox.maxX) / 2.0D;
-        this.y = this.boundingBox.minY + this.heightOffset;
-        this.z = (this.boundingBox.minZ + this.boundingBox.maxZ) / 2.0D;
+        this.x = (this.boundingBox.minX() + this.boundingBox.maxX()) / 2.0D;
+        this.y = this.boundingBox.minY() + this.heightOffset;
+        this.z = (this.boundingBox.minZ() + this.boundingBox.maxZ()) / 2.0D;
     }
 
 

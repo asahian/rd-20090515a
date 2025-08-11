@@ -1,43 +1,18 @@
 package com.mojang.rubydung.phys;
 
-public class AABB {
+/**
+ * Bounding box
+ *
+ * @param minX Minimum x side
+ * @param minY Minimum y side
+ * @param minZ Minimum z side
+ * @param maxX Maximum x side
+ * @param maxY Maximum y side
+ * @param maxZ Maximum z side
+ */
+public record AABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
 
-    private final double epsilon = 0.0F;
-
-    public double minX;
-    public double minY;
-    public double minZ;
-    public double maxX;
-    public double maxY;
-    public double maxZ;
-
-    /**
-     * Bounding box
-     *
-     * @param minX Minimum x side
-     * @param minY Minimum y side
-     * @param minZ Minimum z side
-     * @param maxX Maximum x side
-     * @param maxY Maximum y side
-     * @param maxZ Maximum z side
-     */
-    public AABB(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
-        this.minX = minX;
-        this.minY = minY;
-        this.minZ = minZ;
-        this.maxX = maxX;
-        this.maxY = maxY;
-        this.maxZ = maxZ;
-    }
-
-    /**
-     * Copy the current bounding box object
-     *
-     * @return Clone of the bounding box
-     */
-    public AABB clone() {
-        return new AABB(this.minX, this.minY, this.minZ, this.maxX, this.maxY, this.maxZ);
-    }
+    private static final double epsilon = 0.0F;
 
     /**
      * Expand the bounding box. Positive and negative numbers controls which side of the box should grow.
@@ -115,7 +90,7 @@ public class AABB {
 
         // Check for collision if the X axis of the current box is bigger
         if (x > 0.0F && otherBoundingBox.maxX <= this.minX) {
-            double max = this.minX - otherBoundingBox.maxX - this.epsilon;
+            double max = this.minX - otherBoundingBox.maxX - epsilon;
             if (max < x) {
                 x = max;
             }
@@ -123,7 +98,7 @@ public class AABB {
 
         // Check for collision if the X axis of the current box is smaller
         if (x < 0.0F && otherBoundingBox.minX >= this.maxX) {
-            double max = this.maxX - otherBoundingBox.minX + this.epsilon;
+            double max = this.maxX - otherBoundingBox.minX + epsilon;
             if (max > x) {
                 x = max;
             }
@@ -152,7 +127,7 @@ public class AABB {
 
         // Check for collision if the Y axis of the current box is bigger
         if (y > 0.0F && otherBoundingBox.maxY <= this.minY) {
-            double max = this.minY - otherBoundingBox.maxY - this.epsilon;
+            double max = this.minY - otherBoundingBox.maxY - epsilon;
             if (max < y) {
                 y = max;
             }
@@ -160,7 +135,7 @@ public class AABB {
 
         // Check for collision if the Y axis of the current box is bigger
         if (y < 0.0F && otherBoundingBox.minY >= this.maxY) {
-            double max = this.maxY - otherBoundingBox.minY + this.epsilon;
+            double max = this.maxY - otherBoundingBox.minY + epsilon;
             if (max > y) {
                 y = max;
             }
@@ -189,7 +164,7 @@ public class AABB {
 
         // Check for collision if the Z axis of the current box is bigger
         if (z > 0.0F && otherBoundingBox.maxZ <= this.minZ) {
-            double max = this.minZ - otherBoundingBox.maxZ - this.epsilon;
+            double max = this.minZ - otherBoundingBox.maxZ - epsilon;
             if (max < z) {
                 z = max;
             }
@@ -197,7 +172,7 @@ public class AABB {
 
         // Check for collision if the Z axis of the current box is bigger
         if (z < 0.0F && otherBoundingBox.minZ >= this.maxZ) {
-            double max = this.maxZ - otherBoundingBox.minZ + this.epsilon;
+            double max = this.maxZ - otherBoundingBox.minZ + epsilon;
             if (max > z) {
                 z = max;
             }
@@ -225,22 +200,6 @@ public class AABB {
 
         // Check on Z axis
         return (!(otherBoundingBox.maxZ <= this.minZ)) && (!(otherBoundingBox.minZ >= this.maxZ));
-    }
-
-    /**
-     * Move the bounding box relative.
-     *
-     * @param x Relative offset x
-     * @param y Relative offset y
-     * @param z Relative offset z
-     */
-    public void move(double x, double y, double z) {
-        this.minX += x;
-        this.minY += y;
-        this.minZ += z;
-        this.maxX += x;
-        this.maxY += y;
-        this.maxZ += z;
     }
 
     /**

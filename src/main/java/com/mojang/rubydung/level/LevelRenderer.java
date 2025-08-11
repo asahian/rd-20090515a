@@ -177,15 +177,15 @@ public class LevelRenderer implements LevelListener {
      * @param player The player
      */
     public void pick(Entity player) {
-        float radius = 3.0F;
-        AABB boundingBox = player.boundingBox.grow(radius, radius, radius);
+        var radius = 3.0F;
+        var boundingBox = player.boundingBox.grow(radius, radius, radius);
 
-        int minX = (int) boundingBox.minX;
-        int maxX = (int) (boundingBox.maxX + 1.0f);
-        int minY = (int) boundingBox.minY;
-        int maxY = (int) (boundingBox.maxY + 1.0f);
-        int minZ = (int) boundingBox.minZ;
-        int maxZ = (int) (boundingBox.maxZ + 1.0f);
+        var minX = (int) boundingBox.minX();
+        var maxX = (int) (boundingBox.maxX() + 1.0f);
+        var minY = (int) boundingBox.minY();
+        var maxY = (int) (boundingBox.maxY() + 1.0f);
+        var minZ = (int) boundingBox.minZ();
+        var maxZ = (int) (boundingBox.maxZ() + 1.0f);
 
         glInitNames();
         for (int x = minX; x < maxX; x++) {
@@ -240,7 +240,7 @@ public class LevelRenderer implements LevelListener {
 
         // Render face
         this.tessellator.init();
-        Tile.rock.renderFaceNoTexture(this.tessellator, hitResult.x, hitResult.y, hitResult.z, hitResult.face);
+        Tile.rock.renderFaceNoTexture(this.tessellator, hitResult.x(), hitResult.y(), hitResult.z(), hitResult.face());
         this.tessellator.flush();
 
         // Disable blending

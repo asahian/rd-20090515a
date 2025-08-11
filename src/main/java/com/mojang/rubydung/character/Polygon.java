@@ -42,13 +42,13 @@ public class Polygon {
 
         // Render all vertices
         for (int i = 3; i >= 0; i--) {
-            Vertex vertex = this.vertices[i];
+            var vertex = this.vertices[i];
 
             // Bind UV mappings
-            glTexCoord2f(vertex.u / 64.0F, vertex.v / 32.0F);
+            glTexCoord2f(vertex.u() / 64.0F, vertex.v() / 32.0F);
 
             // Render vertex
-            glVertex3f(vertex.position.x, vertex.position.y, vertex.position.z);
+            glVertex3f(vertex.position().x(), vertex.position().y(), vertex.position().z());
         }
     }
 }

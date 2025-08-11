@@ -157,8 +157,8 @@ public class RubyDung implements Runnable {
         }
 
         // To keep track of framerate
-        int frames = 0;
-        long lastTime = System.currentTimeMillis();
+        var frames = 0;
+        var lastTime = System.currentTimeMillis();
 
         try {
             // Start the game loop
@@ -167,7 +167,7 @@ public class RubyDung implements Runnable {
                 this.timer.advanceTime();
 
                 // Call the tick to reach updates 20 per seconds
-                for (int i = 0; i < this.timer.ticks; ++i) {
+                for (var i = 0; i < this.timer.ticks; ++i) {
                     tick();
                 }
 
@@ -212,18 +212,13 @@ public class RubyDung implements Runnable {
                 }
 
                 // Tile selection
-                if (Keyboard.getEventKey() == 2) { // 1
-                    this.selectedTileId = Tile.rock.id;
-                }
-                if (Keyboard.getEventKey() == 3) { // 2
-                    this.selectedTileId = Tile.dirt.id;
-                }
-                if (Keyboard.getEventKey() == 4) { // 3
-                    this.selectedTileId = Tile.stoneBrick.id;
-                }
-                if (Keyboard.getEventKey() == 5) { // 4
-                    this.selectedTileId = Tile.wood.id;
-                }
+                this.selectedTileId = switch (Keyboard.getEventKey()) {
+                    case 2 -> Tile.rock.id; // 1
+                    case 3 -> Tile.dirt.id; // 2
+                    case 4 -> Tile.stoneBrick.id; // 3
+                    case 5 -> Tile.wood.id; // 4
+                    default -> this.selectedTileId;
+                };
 
                 // Spawn zombie
                 if (Keyboard.getEventKey() == 34) { // G
@@ -236,9 +231,8 @@ public class RubyDung implements Runnable {
         this.level.onTick();
 
         // Tick zombies
-        Iterator<Zombie> iterator = this.zombies.iterator();
-        while (iterator.hasNext()) {
-            Zombie zombie = iterator.next();
+        for (Iterator<Zombie> iterator = this.zombies.iterator(); iterator.hasNext(); ) {
+            var zombie = iterator.next();
 
             // Tick zombie
             zombie.onTick();
@@ -259,7 +253,7 @@ public class RubyDung implements Runnable {
      * @param partialTicks Overflow ticks to interpolate
      */
     private void moveCameraToPlayer(float partialTicks) {
-        Entity player = this.player;
+        var player = this.player;
 
         // Eye height
         glTranslatef(0.0f, 0.0f, -0.3f);
@@ -366,17 +360,17 @@ public class RubyDung implements Runnable {
         this.selectBuffer.flip();
         this.selectBuffer.limit(this.selectBuffer.capacity());
 
-        long closest = 0L;
-        int[] names = new int[10];
-        int hitNameCount = 0;
+        var closest = 0L;
+        var names = new int[10];
+        var hitNameCount = 0;
 
         // Get amount of hits
-        int hits = glRenderMode(GL_RENDER);
-        for (int hitIndex = 0; hitIndex < hits; hitIndex++) {
+        var hits = glRenderMode(GL_RENDER);
+        for (var hitIndex = 0; hitIndex < hits; hitIndex++) {
 
             // Get name count
-            int nameCount = this.selectBuffer.get();
-            long minZ = this.selectBuffer.get();
+            var nameCount = this.selectBuffer.get();
+            var minZ = this.selectBuffer.get();
             this.selectBuffer.get();
 
             // Check if the hit is closer to the camera
@@ -412,8 +406,8 @@ public class RubyDung implements Runnable {
      */
     private void render(float partialTicks) {
         // Get mouse motion
-        float motionX = Mouse.getDX();
-        float motionY = Mouse.getDY();
+        var motionX = Mouse.getDX();
+        var motionY = Mouse.getDY();
 
         // Rotate the camera using the mouse motion input
         this.player.turn(motionX, motionY);
@@ -426,23 +420,25 @@ public class RubyDung implements Runnable {
             // Right click
             if (Mouse.getEventButton() == 1 && Mouse.getEventButtonState() && this.hitResult != null) {
                 // Destroy the tile
-                this.level.setTile(this.hitResult.x, this.hitResult.y, this.hitResult.z, 0);
+                this.level.setTile(this.hitResult.x(), this.hitResult.y(), this.hitResult.z(), 0);
             }
 
             // Left click
             if (Mouse.getEventButton() == 0 && Mouse.getEventButtonState() && this.hitResult != null) {
                 // Get target tile position
-                int x = this.hitResult.x;
-                int y = this.hitResult.y;
-                int z = this.hitResult.z;
+                var x = this.hitResult.x();
+                var y = this.hitResult.y();
+                var z = this.hitResult.z();
 
                 // Get position of the tile using face direction
-                if (this.hitResult.face == 0) y--;
-                if (this.hitResult.face == 1) y++;
-                if (this.hitResult.face == 2) z--;
-                if (this.hitResult.face == 3) z++;
-                if (this.hitResult.face == 4) x--;
-                if (this.hitResult.face == 5) x++;
+                switch (this.hitResult.face()) {
+                    case 0 -> y--;
+                    case 1 -> y++;
+                    case 2 -> z--;
+                    case 3 -> z++;
+                    case 4 -> x--;
+                    case 5 -> x++;
+                }
 
                 // Set the tile
                 this.level.setTile(x, y, z, this.selectedTileId);
@@ -457,7 +453,7 @@ public class RubyDung implements Runnable {
         glEnable(GL_CULL_FACE);
 
         // Get current frustum
-        Frustum frustum = Frustum.getFrustum();
+        var frustum = Frustum.getFrustum();
 
         // Update dirty chunks
         this.levelRenderer.updateDirtyChunks(this.player);
@@ -470,7 +466,7 @@ public class RubyDung implements Runnable {
         this.levelRenderer.render(0);
 
         // Render zombies in sunlight
-        for (Zombie zombie : this.zombies) {
+        for (var zombie : this.zombies) {
             if (zombie.isLit() && frustum.isVisible(zombie.boundingBox)) {
                 zombie.render(partialTicks);
             }
@@ -483,7 +479,7 @@ public class RubyDung implements Runnable {
         this.levelRenderer.render(1);
 
         // Render zombies in shadow
-        for (Zombie zombie : this.zombies) {
+        for (var zombie : this.zombies) {
             if (!zombie.isLit() && frustum.isVisible(zombie.boundingBox)) {
                 zombie.render(partialTicks);
             }
@@ -529,7 +525,7 @@ public class RubyDung implements Runnable {
         glTranslatef(1.5F, -0.5F, -0.5F);
 
         // Setup tile rendering
-        int id = Textures.loadTexture("/terrain.png", 9728);
+        var id = Textures.loadTexture("/terrain.png", 9728);
         glBindTexture(GL_TEXTURE_2D, id);
         glEnable(GL_TEXTURE_2D);
 
@@ -543,8 +539,8 @@ public class RubyDung implements Runnable {
         glPopMatrix();
 
         // Cross hair position
-        int x = this.width / 2;
-        int y = this.height / 2;
+        var x = this.width / 2;
+        var y = this.height / 2;
 
         // Cross hair color
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
@@ -592,7 +588,7 @@ public class RubyDung implements Runnable {
             glEnable(GL_LIGHTING);
             glEnable(GL_COLOR_MATERIAL);
 
-            float brightness = 0.6F;
+            var brightness = 0.6F;
             glLightModel(GL_LIGHT_MODEL_AMBIENT, this.getBuffer(brightness, brightness, brightness, 1.0F));
         }
     }
@@ -619,6 +615,6 @@ public class RubyDung implements Runnable {
      * @param args Program arguments (unused)
      */
     public static void main(String[] args) {
-        new Thread(new RubyDung()).start();
+        Thread.startVirtualThread(new RubyDung());
     }
 }
