@@ -29,17 +29,17 @@ dependencies {
 }
 
 
-task("run", JavaExec::class) {
+tasks.register<JavaExec>("run") {
     jvmArgs = listOf("-Dorg.lwjgl.librarypath=${project.projectDir.toPath()}/run/natives")
     mainClass.set("com.mojang.rubydung.RubyDung")
-    classpath = sourceSets["main"].runtimeClasspath
-    workingDir("${project.projectDir.toPath()}/run")
-    dependsOn("extractNatives")
+    classpath = sourceSets.getByName("main").runtimeClasspath
+    workingDir = project.projectDir.resolve("run")
+    dependsOn(tasks.named("extractNatives"))
 }
 
-task("extractNatives", Copy::class) {
+tasks.register<Copy>("extractNatives") {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     dependsOn(natives)
     from(natives.map { zipTree(it) })
-    into("${project.projectDir.toPath()}/run/natives")
+    into(project.projectDir.resolve("run/natives"))
 }
