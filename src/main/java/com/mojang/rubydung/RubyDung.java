@@ -615,6 +615,6 @@ public class RubyDung implements Runnable {
      * @param args Program arguments (unused)
      */
     public static void main(String[] args) {
-        Thread.startVirtualThread(new RubyDung());
+        new RubyDung().run();
     }
 }
