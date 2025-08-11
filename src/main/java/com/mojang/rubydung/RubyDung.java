@@ -196,7 +196,6 @@ public class RubyDung implements Runnable {
 
         try {
             // Start the game loop
-            this.running = true;
             while (this.running) {
                 if (Display.isCloseRequested()) {
                     this.running = false;
@@ -642,6 +641,7 @@ public class RubyDung implements Runnable {
      */
     public static void main(String[] args) {
         RubyDung rubyDung = new RubyDung();
+        rubyDung.running = true;
         new Thread(new GameUpdater(rubyDung)).start();
         rubyDung.run();
     }
